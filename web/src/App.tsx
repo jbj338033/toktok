@@ -15,7 +15,6 @@ import {
 } from "react-icons/io5";
 import { MdScreenShare, MdStopScreenShare } from "react-icons/md";
 import { BiExit } from "react-icons/bi";
-import { FiUsers } from "react-icons/fi";
 import { ReactNode } from "react";
 
 interface ControlButtonProps {
@@ -44,7 +43,6 @@ function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
-  const [onlineUsers] = useState(Math.floor(Math.random() * 500) + 1000);
   const [socket, setSocket] = useState<Socket | null>(null);
   const OV = useRef<OpenVidu | null>(null);
 
@@ -231,79 +229,68 @@ function App() {
     </motion.button>
   );
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900">
+  return !session ? (
+    <div className="min-h-screen bg-[#6B7FE3] relative overflow-hidden">
+      <div className="absolute inset-0 bg-[url('/home.png')] bg-cover bg-center" />
+      <div className="relative z-10 max-w-7xl mx-auto p-8 h-screen flex flex-col justify-center">
+        <div className="space-y-8 w-full max-w-md">
+          <h1 className="text-6xl font-bold text-white">TokTok</h1>
+          <p className="text-xl text-white/90">많은 매칭이 진행 중이에요</p>
+
+          <div>
+            {isConnecting || isWaiting ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center space-y-4 w-full"
+              >
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="relative w-20 h-20">
+                    <div className="absolute inset-0 rounded-full border-4 border-white border-t-transparent animate-spin" />
+                    <div className="absolute inset-2 rounded-full border-4 border-white/50 border-t-transparent animate-spin-reverse" />
+                  </div>
+                  <span className="text-white/90 font-medium">
+                    {isWaiting ? "상대방을 찾는 중..." : "연결 중..."}
+                  </span>
+                </div>
+                <button
+                  onClick={cancelMatching}
+                  className="px-6 py-2 text-white/90 hover:text-white transition-colors duration-200 font-medium"
+                >
+                  취소
+                </button>
+              </motion.div>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={startMatching}
+                className="px-12 py-4 bg-white rounded-full text-[#6B7FE3] text-lg font-medium 
+                     shadow-lg hover:shadow-white/25 transition-all duration-300 flex items-center gap-2"
+              >
+                <IoVideocam size={24} />
+                비디오챗 시작하기
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="min-h-screen bg-[#6B7FE3]">
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-between items-center bg-black/20 backdrop-blur-md 
-                   rounded-2xl px-6 py-4 mb-8 border border-white/10"
+                 rounded-2xl px-6 py-4 mb-8 border border-white/10"
         >
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-white">랜덤 화상 채팅</h1>
-            <div className="flex items-center space-x-2 text-white/80 text-sm">
-              <FiUsers />
-              <span>{onlineUsers.toLocaleString()}명 온라인</span>
-            </div>
+            <h1 className="text-2xl font-bold text-white">TokTok</h1>
           </div>
-          {session && (
-            <button
-              onClick={disconnect}
-              className="text-white/80 hover:text-white transition-colors duration-200"
-            >
-              <IoClose size={24} />
-            </button>
-          )}
         </motion.div>
 
         <div className="space-y-8">
-          {!session && (
-            <div className="text-center space-y-6">
-              {isConnecting || isWaiting ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="space-y-4"
-                >
-                  <div className="flex flex-col items-center space-y-4">
-                    <div className="relative w-20 h-20">
-                      <div
-                        className="absolute inset-0 rounded-full border-4 border-purple-500 
-                                  border-t-transparent animate-spin"
-                      />
-                      <div
-                        className="absolute inset-2 rounded-full border-4 border-blue-500 
-                                  border-t-transparent animate-spin-reverse"
-                      />
-                    </div>
-                    <span className="text-white/90 font-medium">
-                      {isWaiting ? "상대방을 찾는 중..." : "연결 중..."}
-                    </span>
-                  </div>
-                  <button
-                    onClick={cancelMatching}
-                    className="px-6 py-2 text-red-400 hover:text-red-300 
-                             transition-colors duration-200 font-medium"
-                  >
-                    취소
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={startMatching}
-                  className="px-12 py-5 bg-gradient-to-r from-purple-600 to-blue-600 
-                           rounded-2xl text-white text-lg font-medium shadow-lg 
-                           hover:shadow-purple-500/25 transition-all duration-300"
-                >
-                  시작하기
-                </motion.button>
-              )}
-            </div>
-          )}
-
           <AnimatePresence>
             {error && (
               <motion.div
@@ -311,7 +298,7 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className="bg-red-500/10 border border-red-500/20 text-red-400 
-                         p-4 rounded-xl flex items-center space-x-3"
+                       p-4 rounded-xl flex items-center space-x-3"
               >
                 <IoWarning size={20} />
                 <span>{error}</span>
@@ -319,207 +306,173 @@ function App() {
             )}
           </AnimatePresence>
 
-          {session && (
-            <div className="flex gap-8">
-              <div className="flex-1 space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <motion.div
-                    initial={{ scale: 0.95 }}
-                    animate={{ scale: 1 }}
-                    className="relative group"
+          <div className="flex gap-8">
+            <div className="flex-1 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <motion.div
+                  initial={{ scale: 0.95 }}
+                  animate={{ scale: 1 }}
+                  className="relative group"
+                >
+                  <div
+                    className="aspect-video bg-black/40 rounded-2xl overflow-hidden 
+                            shadow-lg group-hover:shadow-xl transition-all duration-300 
+                            border border-white/10"
                   >
-                    <div
-                      className="aspect-video bg-black/40 rounded-2xl overflow-hidden 
-                                shadow-lg group-hover:shadow-xl transition-all duration-300 
-                                border border-white/10"
-                    >
-                      <div id="publisher" className="w-full h-full" />
-                    </div>
-                    <div
-                      className="absolute bottom-4 left-4 px-4 py-2 bg-black/50 
-                                text-white/90 rounded-full text-sm font-medium 
-                                backdrop-blur-md border border-white/10"
-                    >
-                      나
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ scale: 0.95 }}
-                    animate={{ scale: 1 }}
-                    className="relative group"
+                    <div id="publisher" className="w-full h-full" />
+                  </div>
+                  <div
+                    className="absolute bottom-4 left-4 px-4 py-2 bg-black/50 
+                            text-white/90 rounded-full text-sm font-medium 
+                            backdrop-blur-md border border-white/10"
                   >
-                    <div
-                      className={`aspect-video bg-black/40 rounded-2xl overflow-hidden 
-                                 shadow-lg transition-all duration-300 border border-white/10
-                                 ${
-                                   subscriber
-                                     ? "group-hover:shadow-xl"
-                                     : "opacity-50"
-                                 }`}
-                    >
-                      <div id="subscriber" className="w-full h-full" />
-                    </div>
-                    <div
-                      className="absolute bottom-4 left-4 px-4 py-2 bg-black/50 
-                                text-white/90 rounded-full text-sm font-medium 
-                                backdrop-blur-md border border-white/10"
-                    >
-                      {subscriber ? "상대방" : "대기 중..."}
-                    </div>
-                  </motion.div>
-                </div>
+                    나
+                  </div>
+                </motion.div>
 
-                <div className="flex justify-center gap-4">
-                  <ControlButton
-                    onClick={toggleAudio}
-                    icon={<IoMic size={24} />}
-                    activeIcon={<IoMicOff size={24} />}
-                    isActive={isMuted}
-                  />
-                  <ControlButton
-                    onClick={toggleVideo}
-                    icon={<IoVideocam size={24} />}
-                    activeIcon={<IoVideocamOff size={24} />}
-                    isActive={isVideoOff}
-                  />
-                  <ControlButton
-                    onClick={toggleScreenShare}
-                    icon={<MdScreenShare size={24} />}
-                    activeIcon={<MdStopScreenShare size={24} />}
-                    isActive={isScreenSharing}
-                    activeColor="blue"
-                  />
-                  <ControlButton
-                    onClick={() => setIsChatOpen(!isChatOpen)}
-                    icon={<IoChatbubble size={24} />}
-                    activeIcon={<IoChatbubble size={24} />}
-                    isActive={isChatOpen}
-                    activeColor="purple"
-                  />
-                  <ControlButton
-                    onClick={() => {
-                      disconnect();
-                      startMatching();
-                    }}
-                    icon={<IoRefresh size={24} />}
-                    activeIcon={<IoRefresh size={24} />}
-                    isActive={false}
-                  />
-                  <ControlButton
-                    onClick={disconnect}
-                    icon={<BiExit size={24} />}
-                    activeIcon={<BiExit size={24} />}
-                    isActive={true}
-                  />
-                </div>
+                <motion.div
+                  initial={{ scale: 0.95 }}
+                  animate={{ scale: 1 }}
+                  className="relative group"
+                >
+                  <div
+                    className={`aspect-video bg-black/40 rounded-2xl overflow-hidden 
+                             shadow-lg transition-all duration-300 border border-white/10
+                             ${
+                               subscriber
+                                 ? "group-hover:shadow-xl"
+                                 : "opacity-50"
+                             }`}
+                  >
+                    <div id="subscriber" className="w-full h-full" />
+                  </div>
+                  <div
+                    className="absolute bottom-4 left-4 px-4 py-2 bg-black/50 
+                            text-white/90 rounded-full text-sm font-medium 
+                            backdrop-blur-md border border-white/10"
+                  >
+                    {subscriber ? "상대방" : "대기 중..."}
+                  </div>
+                </motion.div>
               </div>
 
-              <AnimatePresence>
-                {isChatOpen && (
-                  <motion.div
-                    initial={{ x: "100%", opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: "100%", opacity: 0 }}
-                    className="w-80 bg-black/20 backdrop-blur-xl rounded-2xl 
-                             border border-white/10 flex flex-col"
-                  >
-                    <div className="p-4 border-b border-white/10">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-white font-medium">채팅</h3>
-                        <button
-                          onClick={() => setIsChatOpen(false)}
-                          className="text-white/80 hover:text-white"
-                        >
-                          <IoClose size={20} />
-                        </button>
-                      </div>
-                    </div>
+              <div className="flex justify-center gap-4">
+                <ControlButton
+                  onClick={toggleAudio}
+                  icon={<IoMic size={24} />}
+                  activeIcon={<IoMicOff size={24} />}
+                  isActive={isMuted}
+                />
+                <ControlButton
+                  onClick={toggleVideo}
+                  icon={<IoVideocam size={24} />}
+                  activeIcon={<IoVideocamOff size={24} />}
+                  isActive={isVideoOff}
+                />
+                <ControlButton
+                  onClick={toggleScreenShare}
+                  icon={<MdScreenShare size={24} />}
+                  activeIcon={<MdStopScreenShare size={24} />}
+                  isActive={isScreenSharing}
+                  activeColor="blue"
+                />
+                <ControlButton
+                  onClick={() => setIsChatOpen(!isChatOpen)}
+                  icon={<IoChatbubble size={24} />}
+                  activeIcon={<IoChatbubble size={24} />}
+                  isActive={isChatOpen}
+                  activeColor="purple"
+                />
+                <ControlButton
+                  onClick={() => {
+                    disconnect();
+                    startMatching();
+                  }}
+                  icon={<IoRefresh size={24} />}
+                  activeIcon={<IoRefresh size={24} />}
+                  isActive={false}
+                />
+                <ControlButton
+                  onClick={disconnect}
+                  icon={<BiExit size={24} />}
+                  activeIcon={<BiExit size={24} />}
+                  isActive={true}
+                />
+              </div>
+            </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                      {messages.map((message, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`flex ${
-                            message.isMine ? "justify-end" : "justify-start"
+            <AnimatePresence>
+              {isChatOpen && (
+                <motion.div
+                  initial={{ x: "100%", opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: "100%", opacity: 0 }}
+                  className="w-80 bg-black/20 backdrop-blur-xl rounded-2xl 
+                         border border-white/10 flex flex-col"
+                >
+                  <div className="p-4 border-b border-white/10">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-white font-medium">채팅</h3>
+                      <button
+                        onClick={() => setIsChatOpen(false)}
+                        className="text-white/80 hover:text-white"
+                      >
+                        <IoClose size={20} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {messages.map((message, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex ${
+                          message.isMine ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[80%] px-4 py-2 rounded-2xl ${
+                            message.isMine
+                              ? "bg-purple-500/20 text-purple-100"
+                              : "bg-white/10 text-white/90"
                           }`}
                         >
-                          <div
-                            className={`max-w-[80%] px-4 py-2 rounded-2xl ${
-                              message.isMine
-                                ? "bg-purple-500/20 text-purple-100"
-                                : "bg-white/10 text-white/90"
-                            }`}
-                          >
-                            {message.text}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
+                          {message.text}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
 
-                    <div className="p-4 border-t border-white/10">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={currentMessage}
-                          onChange={(e) => setCurrentMessage(e.target.value)}
-                          onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                          placeholder="메시지를 입력하세요..."
-                          className="flex-1 bg-white/10 border border-white/20 rounded-xl 
-                                   px-4 py-2 text-white placeholder-white/50 outline-none 
-                                   focus:ring-2 focus:ring-purple-500/50"
-                        />
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={sendMessage}
-                          className="p-2 text-white/80 hover:text-white"
-                        >
-                          <IoSend size={20} />
-                        </motion.button>
-                      </div>
+                  <div className="p-4 border-t border-white/10">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={currentMessage}
+                        onChange={(e) => setCurrentMessage(e.target.value)}
+                        onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                        placeholder="메시지를 입력하세요..."
+                        className="flex-1 bg-white/10 border border-white/20 rounded-xl 
+                               px-4 py-2 text-white placeholder-white/50 outline-none 
+                               focus:ring-2 focus:ring-purple-500/50"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={sendMessage}
+                        className="p-2 text-white/80 hover:text-white"
+                      >
+                        <IoSend size={20} />
+                      </motion.button>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
-
-      <style>{`
-        body {
-          background: #0f172a;
-        }
-
-        ::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.3);
-        }
-
-        @keyframes spin-reverse {
-          from {
-            transform: rotate(360deg);
-          }
-          to {
-            transform: rotate(0deg);
-          }
-        }
-      `}</style>
     </div>
   );
 }
